@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mayavi Technology Club | K L University</title>
+<meta name="description" content="Mayavi is the creative technology club of K L University: Game Development, Extended Reality, 3D Modelling & Animations and UI/UX Design.">
+<link rel="icon" href="assets/img/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="noise" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-ring" aria-hidden="true"><span>VIEW</span></div>
+<div class="bg-grid" aria-hidden="true"></div>
+
+<section id="vr-intro" class="vr-intro" aria-label="Enter Mayavi virtual environment">
+  <div class="vr-stage">
+    <canvas id="vr-canvas" aria-label="Interactive 3D neon VR headset"></canvas>
+    <div class="vr-atmosphere" aria-hidden="true"></div>
+    <div class="vr-copy">
+      <span class="tag">[ MAYAVI // IMMERSIVE SYSTEM ]</span>
+      <h1>Enter another<br><strong>reality</strong></h1>
+      <p id="vr-status">INITIALIZING HEADSET</p>
+    </div>
+    <div class="vr-hud vr-hud-tl">MODEL // NEON VISIONARY<br><span>SPATIAL ACCESS PROTOCOL</span></div>
+    <div class="vr-hud vr-hud-br"><span class="vr-scroll-line"></span><b>SCROLL TO ENTER</b></div>
+    <button id="vr-skip" class="vr-skip" type="button">Skip intro <span>↗</span></button>
+    <div id="vr-loader" class="vr-loader" aria-live="polite">
+      <span>CALIBRATING REALITY</span><b id="vr-progress">0%</b>
+      <i><em id="vr-progress-bar"></em></i>
+    </div>
+  </div>
+</section>
+
+<!-- FLASH EXIT OVERLAY FOR WORMHOLE -->
+<div id="vr-flash-overlay" aria-hidden="true"></div>
+
+<!-- NAV -->
+<header id="header" class="header">
+  <a href="index.html" class="brand" data-cursor="HOME">
+    <img src="assets/img/mayavilogowhite.png" alt="Mayavi logo">
+    <span><b>MAYAVI</b><small>TECH CLUB · KLU</small></span>
+  </a>
+  <nav id="nav" class="nav" aria-label="Main">
+    <a href="index.html" class="active">Home</a><a href="blogs.html">Blogs</a><a href="about.html">About Us</a>
+    <a href="events">Events</a><a href="team-all.html">Team</a><a href="contact.html">Contact</a>
+  </nav>
+  <button class="nav-toggle" aria-label="Menu" aria-expanded="false"><i class="bi bi-list"></i></button>
+  <div class="navprog" aria-hidden="true"><span id="np-label">HOME</span><i><b id="np-bar"></b></i><span id="np-pct">0%</span></div>
+</header>
+
+<!-- section rail -->
+<nav class="rail" aria-label="Sections">
+  <a href="#hero" data-i="0"><b>HOME</b><span>01</span><i></i></a>
+  <a href="#wings" data-i="1"><b>WINGS</b><span>02</span><i></i></a>
+  <a href="#tools" data-i="2"><b>TOOLS</b><span>03</span><i></i></a>
+  <a href="#experience" data-i="3"><b>EXPERIENCE</b><span>04</span><i></i></a>
+  <a href="#join" data-i="4"><b>JOIN</b><span>05</span><i></i></a>
+</nav>
+
+<main>
+<!-- 01 HERO -->
+<section id="hero" class="hero">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="hud hud-tl"><b>MAYAVI SYSTEM</b><span class="ok">ONLINE</span></div>
+  <div class="hud hud-tr"><b>WORLD</b><span>CREATIVE TECHNOLOGY</span></div>
+  <div class="hud hud-bl"><b>16.4419° N, 80.6225° E</b><span>CHAPTER 01</span></div>
+  <div class="hud hud-br"><b>SCROLL TO EXPLORE</b><span class="scrollcue"></span></div>
+  <div class="hero-shell">
+    <div class="hero-text">
+      <p class="eyebrow r"><span class="pill"><i></i>SYS.ACTIVE</span> K L UNIVERSITY · TECHNOLOGY CLUB</p>
+      <h1 class="hero-title"><span class="split">WELCOME TO</span> <span class="split accent">MAYAVI</span></h1>
+      <p class="hero-desc r">The premier creative technology club of K L University where students collaborate to architect <strong>Game Development</strong>, <strong>Extended Reality (AR · VR · MR)</strong>, <strong>3D Modelling &amp; Animations</strong>, and next-generation <strong>UI/UX Design</strong>.</p>
+      <div class="actions r">
+        <a href="#wings" class="btn btn-primary" data-cursor="ENTER"><span>Explore Mayavi</span><i class="bi bi-arrow-right"></i></a>
+        <a href="events" class="btn btn-ghost" data-cursor="ENTER"><span>View Events</span><i class="bi bi-arrow-up-right"></i></a>
+      </div>
+      <ol class="strip r"><li><b>01</b>GAME DEV</li><li><b>02</b>EXTENDED REALITY</li><li><b>03</b>3D ANIMATION</li><li><b>04</b>SPATIAL UI/UX</li></ol>
+    </div>
+    <div class="hero-visual" aria-hidden="false">
+      <div class="emblem">
+        <i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>
+        <img src="assets/img/mayavilogowhite.png" alt="Mayavi Technology Club emblem" class="emblem-logo">
+      </div>
+      <div class="mod m1"><i class="bi bi-controller"></i>Game Dev</div>
+      <div class="mod m2"><i class="bi bi-badge-ar-fill"></i>Extended Reality</div>
+      <div class="mod m3"><i class="bi bi-boxes"></i>3D &amp; Animation</div>
+      <div class="mod m4"><i class="bi bi-bezier"></i>UI/UX</div>
+    </div>
+  </div>
+</section>
+
+<div class="cut" aria-hidden="true"><i class="streak"></i><span class="jp">第二章</span><span class="lbl">CHAPTER 02 // WINGS</span></div>
+
+<!-- 02 WINGS (pinned scenes) -->
+<section id="wings" class="wings">
+  <header class="sec-head">
+    <span class="tag">[ 01 // CORE VERTICALS ]</span>
+    <h2 class="split">Our Wings</h2>
+    <p>We are excited to announce that in our club, we ensure to share and explore all the wings of gaming, virtual reality, augmented reality, and mixed reality with our members.</p>
+  </header>
+  <div class="stage">
+    <article class="scene" data-name="GAME DEVELOPMENT">
+      <div class="scene-media"><img src="assets/img/1.jpg" alt="Game Development" loading="eager"><i class="shade"></i></div>
+      <div class="scene-body"><span class="num">01</span><span class="cat">ENGINE ARCHITECTURE & GAMEPLAY</span>
+      <h3>Game Development</h3><p>Game development is a captivating blend of artistry and technology, where worlds come alive and stories unfold. It encompasses the process of creating video games from concept to completion, engaging players in immersive experiences.</p><ul><li>Unreal Engine 5</li><li>Unity 3D</li><li>Gameplay Systems</li><li>C++ / C#</li></ul></div>
+    </article>
+    <article class="scene" data-name="EXTENDED REALITY">
+      <div class="scene-media"><img src="assets/img/2.jpg" alt="Extended Reality" loading="lazy"><i class="shade"></i></div>
+      <div class="scene-body"><span class="num">02</span><span class="cat">SPATIAL COMPUTING & IMMERSIVE TECH</span>
+      <h3>Extended Reality</h3><p>Extended Reality (XR) is a revolutionary technology that merges the real and virtual worlds, creating immersive and interactive experiences. It encompasses Virtual Reality (VR), Augmented Reality (AR), and Mixed Reality (MR), blurring the boundaries between physical and digital realms.</p><ul><li>Augmented Reality</li><li>Virtual Reality</li><li>Mixed Reality</li><li>WebXR SDK</li></ul></div>
+    </article>
+    <article class="scene" data-name="MODELLING AND ANIMATIONS">
+      <div class="scene-media"><img src="assets/img/3.jpg" alt="Modelling and Animations" loading="lazy"><i class="shade"></i></div>
+      <div class="scene-body"><span class="num">03</span><span class="cat">3D DIGITAL CREATION & MOTION</span>
+      <h3>Modelling and Animations</h3><p>Modelling and animations are crucial aspects of digital content creation, bringing life and realism to virtual worlds. Modelling involves creating 3D models of characters, objects, and environments using specialized software. Skilled artists meticulously craft shape, texture, and details for maximum visual appeal.</p><ul><li>Blender Pipeline</li><li>Character Rigging</li><li>Lighting & Shaders</li><li>3D Simulation</li></ul></div>
+    </article>
+    <article class="scene" data-name="UI/UX DESIGN">
+      <div class="scene-media"><img src="assets/img/4.jpg" alt="UI/UX Design" loading="lazy"><i class="shade"></i></div>
+      <div class="scene-body"><span class="num">04</span><span class="cat">HUMAN-CENTERED & SPATIAL DESIGN</span>
+      <h3>UI/UX Design</h3><p>UI/UX, short for User Interface and User Experience, focuses on creating seamless and engaging digital interactions. UI encompasses the visual elements and layout of an interface, while UX focuses on the overall user journey and experience. A well-designed UI/UX strives to provide intuitive navigation.</p><ul><li>Spatial Interfaces</li><li>Design Systems</li><li>Interaction Flows</li><li>Interactive Prototyping</li></ul></div>
+    </article>
+    <div class="stage-hud"><span id="scene-label">SCENE 01 / 04</span><i><b id="scene-bar"></b></i><span id="scene-name">DISCIPLINE: GAME DEVELOPMENT</span></div>
+  </div>
+</section>
+
+<div class="cut" aria-hidden="true"><i class="streak"></i><span class="jp">第三章</span><span class="lbl">CHAPTER 03 // STACK</span></div>
+
+<!-- 03 TOOLS (horizontal) -->
+<section id="tools" class="tools">
+  <header class="sec-head">
+    <span class="tag">[ 02 // CREATIVE STACK ]</span>
+    <h2 class="split">Tools &amp; Ecosystem</h2>
+    <p>The tools related to our club encompass creativity, innovation, design, and other diverse modes that are indispensable.</p>
+  </header>
+  <div class="track" data-cursor="DRAG">
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="bi bi-unity"></i><span>REAL-TIME 3D</span></div>
+      <b class="tool-n">01</b><h3>Unity</h3><p>Unity is a powerful and versatile game development engine that allows to create and play games across various platforms. It also involves sharing knowledge and guiding others in using the engine's features to bring their creative ideas to life.</p></article>
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="bi bi-magic"></i><span>SOCIAL AR</span></div>
+      <b class="tool-n">02</b><h3>SparkAR Studio</h3><p>SparkAR Studio is a platform that enables to create augmented reality effects and filters for social media platforms like Instagram and Facebook.</p></article>
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="fa-solid fa-gamepad"></i><span>AAA GRAPHICS</span></div>
+      <b class="tool-n">03</b><h3>Unreal & Core</h3><p>Unreal Engine and Core offer extensive tools, documentation, and support, empowering to build complex games and interactive content while fostering a vibrant community.</p></article>
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="bi bi-laptop"></i><span>3D PIPELINE</span></div>
+      <b class="tool-n">04</b><h3>Blender</h3><p>Blender is a versatile and feature-rich 3D modeling and animation software that allows to create stunning visuals and realistic simulations.</p></article>
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="bi bi-headset-vr"></i><span>SNAP AR</span></div>
+      <b class="tool-n">05</b><h3>Lens Studio</h3><p>Lens Studio is a user-friendly platform that allows to create augmented reality experiences and filters for platforms like Snapchat.</p></article>
+    <article class="tool" data-cursor="EXPLORE"><div class="tool-top"><i class="bi bi-badge-ar-fill"></i><span>MOBILE SDK</span></div>
+      <b class="tool-n">06</b><h3>Google AR Core</h3><p>Google AR Core enables to experience augmented reality on supported Android devices, bringing virtual objects into the real world through my smartphone or tablet.</p></article>
+  </div>
+</section>
+
+<div class="cut" aria-hidden="true"><i class="streak"></i><span class="jp">第四章</span><span class="lbl">CHAPTER 04 // EXPERIENCE</span></div>
+
+<!-- 04 EXPERIENCE (sticky) -->
+<section id="experience" class="exp">
+  <div class="exp-grid">
+    <div class="exp-visual">
+      <div class="exp-frame" data-cursor="VIEW">
+        <img src="assets/img/5.jpg" alt="The Mayavi experience" loading="lazy">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="badge b1"><i class="bi bi-cpu"></i><span><b>INNOVATION LAB</b>K L UNIVERSITY</span></div>
+        <div class="badge b2"><i class="bi bi-people"></i><span><b>COLLABORATIVE</b>PEER EXPERIENCES</span></div>
+        <div class="exp-hud"><span>DISCIPLINE</span><b id="exp-now">GAME DEVELOPMENT</b><span>STATUS: ACTIVE</span></div>
+      </div>
+    </div>
+    <div class="exp-copy">
+      <span class="tag">[ 03 // PERSPECTIVE ]</span>
+      <h2 class="split">The Mayavi Experience</h2>
+      <p class="lead">At Mayavi, we believe that gaming is not just a hobby but an art form that can be mastered. Our club is dedicated to creating an immersive and inclusive environment where enthusiasts like you can come together, share ideas, and collaborate on exciting projects. By joining Mayavi, you open yourself up to a world of opportunities and benefits.</p>
+      <p class="sublead">Let's take a look at some of the advantages of being a member:</p>
+      <div class="caps">
+        <article class="cap" data-name="GAME DEVELOPMENT"><span class="cap-n">01</span><div><h4><i class="bi bi-controller"></i>Game Development</h4><p>Unleash your creativity and bring your game ideas to life at Mayavi. Learn programming languages, game engines, and design principles to transform your dreams into playable realities.</p></div></article>
+        <article class="cap" data-name="AR DEVELOPMENT"><span class="cap-n">02</span><div><h4><i class="bi bi-badge-ar-fill"></i>AR Development</h4><p>Immerse yourself in the fascinating world of Augmented Reality (AR) at Mayavi. Access workshops and training sessions to create interactive experiences that merge the virtual and physical worlds.</p></div></article>
+        <article class="cap" data-name="VR DEVELOPMENT"><span class="cap-n">03</span><div><h4><i class="bi bi-headset-vr"></i>VR Development</h4><p>Embark on a journey into Virtual Reality (VR) with Mayavi. Build captivating virtual environments, develop interactive gameplay mechanics, and transport users to extraordinary realms.</p></div></article>
+        <article class="cap" data-name="UI/UX DESIGNING"><span class="cap-n">04</span><div><h4><i class="bi bi-bezier"></i>UI/UX Designing</h4><p>Master the art of crafting visually stunning interfaces and optimizing user experiences at Mayavi. Elevate your games and designs with skills that make them truly standout and engage players.</p></div></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 JOIN -->
+<section id="join" class="join">
+  <div class="join-glow"></div>
+  <canvas id="fx2" aria-hidden="true"></canvas>
+  <div class="join-inner">
+    <span class="tag">[ 04 // JOIN THE CLUB ]</span>
+    <h2 class="join-title split">Build the next reality with <span class="text-gradient-purple">Mayavi</span></h2>
+    <p class="join-sub r">Game development, Extended Reality, 3D animation, and UI/UX design — pick a discipline and start building with a community of student creators at K L University.</p>
+    <div class="actions r">
+      <a href="contact.html" class="btn btn-primary" data-cursor="ENTER"><span>Get In Touch</span><i class="bi bi-arrow-right"></i></a>
+      <a href="team-all.html" class="btn btn-ghost" data-cursor="ENTER"><span>Meet the Team</span><i class="bi bi-arrow-up-right"></i></a>
+    </div>
+    <p class="eot r">END OF TRANSMISSION</p>
+    <a href="#" id="replay" class="replay r"><i class="bi bi-arrow-counterclockwise"></i> REPLAY ENTRANCE</a>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="foot-top">
+    <div><h3>Mayavi</h3><p>K L University Green Fields, Vaddeswaram, Guntur District, AP Email: support@klefmayavi.tech</p><div class="social"><a href="mailto:support@klefmayavi.tech" target="_blank" rel="noopener" aria-label="envelope"><i class="bi bi-envelope"></i></a><a href="https://t.me/+q38bOXvcREBmMGFl" target="_blank" rel="noopener" aria-label="telegram"><i class="bi bi-telegram"></i></a><a href="https://www.instagram.com/klef.mayavi/" target="_blank" rel="noopener" aria-label="instagram"><i class="bi bi-instagram"></i></a><a href="https://www.linkedin.com/company/mayavi-technology-club/mycompany/" target="_blank" rel="noopener" aria-label="linkedin"><i class="bi bi-linkedin"></i></a><a href="https://discord.com/invite/UrWKGFffhG" target="_blank" rel="noopener" aria-label="discord"><i class="bi bi-discord"></i></a><a href="https://www.youtube.com/channel/UCbDBefAKb5m5FigI2j0UQPQ" target="_blank" rel="noopener" aria-label="youtube"><i class="bi bi-youtube"></i></a></div></div>
+    <div><h4>Navigation</h4><a href="index.html">Home</a><a href="about.html">About</a><a href="events">Events</a><a href="team-all.html">Team</a><a href="contact.html">Contact</a></div>
+    <div><h4>Domains</h4><a href="#wings">Game Development</a><a href="#wings">Extended Reality</a><a href="#wings">Modelling &amp; Animation</a><a href="#wings">UI/UX Design</a></div>
+  </div>
+  <div class="foot-bot"><span>© 2026 MAYAVI TECHNOLOGY CLUB · K L UNIVERSITY</span><a href="#hero" id="top" data-cursor="TOP">PRESS ↑ TO RETURN</a></div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="js/vr-intro.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
