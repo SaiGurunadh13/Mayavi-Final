@@ -32,7 +32,30 @@
   <nav class="crumbs r" aria-label="Breadcrumb"><span><a href="index.html">Home</a></span><span>Team</span></nav></div>
   <div class="sub-hud r"><b>MAYAVI SYSTEM · ONLINE</b>PAGE: TEAM</div>
 </section>
-<section class="wrap"><div class="wrap-head"><span class="tag">[ 01 // PLAYER ROSTER ]</span><h2>Our Team</h2><p>Introducing the incredible members of our club team, a dedicated group of talented individuals working together to achieve greatness in their respective fields.</p></div><div class="tabs" role="tablist"><button class="tab" data-year="2019" data-cursor="OPEN">Y19</button><button class="tab" data-year="2020" data-cursor="OPEN">Y20</button><button class="tab" data-year="2021" data-cursor="OPEN">Y21</button><button class="tab" data-year="2022" data-cursor="OPEN">Y22</button><button class="tab on" data-year="2023" data-cursor="OPEN">Y23</button></div><div id="team-2019" class="team-year"><div class="members">
+<section class="wrap">
+  <div class="wrap-head">
+    <span class="tag">[ 01 // PLAYER ROSTER & TEAMS ]</span>
+    <h2>Our Teams &amp; Members</h2>
+    <p>Introducing the incredible members and specialized wings of our club, working together to architect the future of creative technology.</p>
+  </div>
+
+  <div class="tabs" style="margin-bottom:28px;" role="tablist">
+    <button class="tab on" id="view-mode-categories" data-cursor="OPEN">Teams by Category</button>
+    <button class="tab" id="view-mode-batches" data-cursor="OPEN">Roster by Batch</button>
+  </div>
+
+  <div id="teams-by-category" class="teams-category-view">
+    <p class="empty" style="color:var(--dim);text-align:center;padding:30px;">Loading teams and categories…</p>
+  </div>
+
+  <div id="batch-tabs-wrap" class="tabs" style="display:none;margin-bottom:20px;" role="tablist">
+    <button class="tab" data-year="2019" data-cursor="OPEN">Y19</button>
+    <button class="tab" data-year="2020" data-cursor="OPEN">Y20</button>
+    <button class="tab" data-year="2021" data-cursor="OPEN">Y21</button>
+    <button class="tab" data-year="2022" data-cursor="OPEN">Y22</button>
+    <button class="tab on" data-year="2023" data-cursor="OPEN">Y23</button>
+  </div>
+  <div id="team-2019" class="team-year"><div class="members">
       <article class="member rv"><div class="m-img"><img loading="lazy" src="assets/img/core/18.jpg" alt="Dr VIJAY KUMAR BURUGARI"></div><div class="m-info"><h4>Dr VIJAY KUMAR BURUGARI</h4><span>FACULTY-INCHARGE</span></div></article>
       <article class="member rv"><div class="m-img"><img loading="lazy" src="assets/img/core/1.jpg" alt="Member 1"></div><div class="m-info"><h4>Member 1</h4><span>Support</span></div></article>
       <article class="member rv"><div class="m-img"><img loading="lazy" src="assets/img/core/2.jpg" alt="Member 2"></div><div class="m-info"><h4>Member 2</h4><span>Support</span></div></article>
@@ -86,13 +109,21 @@
 <footer class="footer">
   <div class="foot-top">
     <div><h3>Mayavi</h3><p>K L University Green Fields, Vaddeswaram, Guntur District, AP Email: support@klefmayavi.tech</p><div class="social"><a href="mailto:support@klefmayavi.tech" target="_blank" rel="noopener" aria-label="envelope"><i class="bi bi-envelope"></i></a><a href="https://t.me/+q38bOXvcREBmMGFl" target="_blank" rel="noopener" aria-label="telegram"><i class="bi bi-telegram"></i></a><a href="https://www.instagram.com/klef.mayavi/" target="_blank" rel="noopener" aria-label="instagram"><i class="bi bi-instagram"></i></a><a href="https://www.linkedin.com/company/mayavi-technology-club/mycompany/" target="_blank" rel="noopener" aria-label="linkedin"><i class="bi bi-linkedin"></i></a><a href="https://discord.com/invite/UrWKGFffhG" target="_blank" rel="noopener" aria-label="discord"><i class="bi bi-discord"></i></a><a href="https://www.youtube.com/channel/UCbDBefAKb5m5FigI2j0UQPQ" target="_blank" rel="noopener" aria-label="youtube"><i class="bi bi-youtube"></i></a></div></div>
-    <div><h4>Navigation</h4><a href="index.html">Home</a><a href="about.html">About</a><a href="events">Events</a><a href="team-all.html">Team</a><a href="contact.html">Contact</a></div>
+    <div><h4>Navigation</h4><a href="index.html">Home</a><a href="about.html">About</a><a href="events">Events</a><a href="team-all.html">Team</a><a href="contact.html">Contact</a><a href="/admin" style="color:var(--p2);font-weight:500;">Admin Portal ↗</a></div>
     <div><h4>Domains</h4><a href="index.html#wings">Game Development</a><a href="index.html#wings">Extended Reality</a><a href="index.html#wings">Modelling &amp; Animation</a><a href="index.html#wings">UI/UX Design</a></div>
   </div>
-  <div class="foot-bot"><span>© 2026 MAYAVI TECHNOLOGY CLUB · K L UNIVERSITY</span><a href="#hero" id="top" data-cursor="TOP">PRESS ↑ TO RETURN</a></div>
+  <div class="foot-bot">
+    <span>© 2026 MAYAVI TECHNOLOGY CLUB · K L UNIVERSITY</span>
+    <a href="/admin" class="btn-admin-portal" data-cursor="ENTER">
+      <i class="bi bi-shield-lock-fill"></i>
+      <span>Admin Login</span>
+    </a>
+    <a href="#hero" id="top" data-cursor="TOP">PRESS ↑ TO RETURN</a>
+  </div>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="js/page.js"></script>
+<script src="js/teams.js"></script>
 </body>
 </html>
