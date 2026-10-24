@@ -24,13 +24,23 @@ const AdminApp = (() => {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 
-  // Resolve API URL (handles both direct port 8000 and Live Server / static previews)
+  // Resolve API URL (supports window.__MAYAVI_CONFIG__.API_BASE_URL, Netlify proxy, and local dev)
   function getApiUrl(endpoint) {
     if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
+    
+    // 1. Explicit configuration from config.js or window
+    const cfg = window.__MAYAVI_CONFIG__;
+    if (cfg && typeof cfg.API_BASE_URL === 'string' && cfg.API_BASE_URL.trim()) {
+      return cfg.API_BASE_URL.replace(/\/+$/, '') + endpoint;
+    }
+
+    // 2. Local development fallback (previewing on VS Code Live Server :5500, etc.)
     const loc = window.location;
     if ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1' || loc.protocol === 'file:') && loc.port !== '8000') {
       return `http://127.0.0.1:8000${endpoint}`;
     }
+
+    // 3. Same-origin default (Netlify /api/* rewrite proxy or backend-hosted portal)
     return endpoint;
   }
 
@@ -171,10 +181,13 @@ const AdminApp = (() => {
         data = await res.json().catch(() => ({}));
       } else {
         await res.text().catch(() => '');
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         throw new Error(
           res.status === 404
-            ? 'Backend API not found (404). Please ensure the FastAPI server is running on http://127.0.0.1:8000 via "python server.py".'
-            : `Server returned an unexpected response (Status ${res.status}). Ensure the FastAPI server is running.`
+            ? (isLocal
+                ? 'Backend API not found (404). Ensure FastAPI is running locally via "python server.py" on port 8000.'
+                : 'Backend API not found (404). The FastAPI backend is not connected to this site yet. Deploy the backend and configure Netlify _redirects or set API_BASE_URL in config.js.')
+            : `Server returned an unexpected response (Status ${res.status}). Verify the FastAPI backend is operational.`
         );
       }
 
@@ -192,7 +205,10 @@ const AdminApp = (() => {
       loadCategoriesCache();
     } catch (err) {
       if (err.name === 'TypeError' && String(err.message).toLowerCase().includes('fetch')) {
-        errMsg.textContent = 'Cannot connect to backend server. Make sure "python server.py" is running on http://127.0.0.1:8000.';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        errMsg.textContent = isLocal
+          ? 'Cannot connect to backend server. Make sure "python server.py" is running on http://127.0.0.1:8000.'
+          : 'Cannot connect to backend server. Please verify the backend service is deployed and CORS is configured.';
       } else {
         errMsg.textContent = err.message;
       }

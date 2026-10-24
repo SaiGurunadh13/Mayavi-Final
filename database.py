@@ -8,8 +8,8 @@ import time
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
-DB_DIR = os.path.join(os.path.dirname(__file__), "data")
-DB_PATH = os.path.join(DB_DIR, "mayavi.db")
+DB_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(__file__), "data"))
+DB_PATH = os.getenv("DB_PATH", os.path.join(DB_DIR, "mayavi.db"))
 
 def get_db_connection() -> sqlite3.Connection:
     os.makedirs(DB_DIR, exist_ok=True)

@@ -30,14 +30,27 @@
     );
   };
 
+  const getApiUrl = (endpoint) => {
+    if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
+    const cfg = window.__MAYAVI_CONFIG__;
+    if (cfg && typeof cfg.API_BASE_URL === 'string' && cfg.API_BASE_URL.trim()) {
+      return cfg.API_BASE_URL.replace(/\/+$/, '') + endpoint;
+    }
+    const loc = window.location;
+    if ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1' || loc.protocol === 'file:') && loc.port !== '8000') {
+      return `http://127.0.0.1:8000${endpoint}`;
+    }
+    return endpoint;
+  };
+
   async function loadTeamsAndCategories() {
     const catContainer = $('#teams-by-category');
     if (!catContainer) return;
 
     try {
       const [categories, teams] = await Promise.all([
-        fetch('/api/categories').then(r => r.ok ? r.json() : []),
-        fetch('/api/teams').then(r => r.ok ? r.json() : [])
+        fetch(getApiUrl('/api/categories')).then(r => r.ok ? r.json() : []),
+        fetch(getApiUrl('/api/teams')).then(r => r.ok ? r.json() : [])
       ]);
 
       if (!categories.length && !teams.length) return;
@@ -132,7 +145,7 @@
     if (!targetDiv) return;
 
     try {
-      const members = await fetch(`/api/members?batch_year=Y${batchYear.slice(-2)}`).then(r => r.ok ? r.json() : []);
+      const members = await fetch(getApiUrl(`/api/members?batch_year=Y${batchYear.slice(-2)}`)).then(r => r.ok ? r.json() : []);
       if (members && members.length > 0) {
         const container = $('.members', targetDiv);
         if (container) {

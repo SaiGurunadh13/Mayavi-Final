@@ -28,7 +28,7 @@ from auth import (
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOADS_DIR = BASE_DIR / "uploads"
+UPLOADS_DIR = Path(os.getenv("UPLOADS_DIR", str(BASE_DIR / "uploads")))
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 ADMIN_DIR = BASE_DIR / "admin"
 ADMIN_DIR.mkdir(parents=True, exist_ok=True)
@@ -43,10 +43,26 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# CORS Middleware
+# CORS Middleware - Production and Development Safe
+allowed_origins_env = os.getenv("CORS_ORIGINS", "")
+if allowed_origins_env.strip():
+    allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "https://klmayavi.in",
+        "https://www.klmayavi.in",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -203,14 +219,24 @@ async def admin_login(payload: LoginRequest, request: Request, response: Respons
     token, expires_at = create_admin_session(admin["id"])
 
     # Set secure HttpOnly cookie
+    cookie_secure_env = os.getenv("COOKIE_SECURE", "auto").lower()
+    if cookie_secure_env == "auto":
+        is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+    else:
+        is_secure = cookie_secure_env in ("true", "1", "yes")
+
+    samesite_env = os.getenv("COOKIE_SAMESITE", "lax").lower()
+    if samesite_env not in ("lax", "strict", "none"):
+        samesite_env = "lax"
+
     response.set_cookie(
         key="mayavi_admin_session",
         value=token,
         httponly=True,
         max_age=7 * 24 * 3600,
         expires=expires_at.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-        samesite="lax",
-        secure=False  # Works on HTTP localhost and HTTPS production
+        samesite=samesite_env,
+        secure=is_secure
     )
 
     log_activity("LOGIN", "ADMIN", admin["id"], f"Successful login from {ip}", admin["username"])
@@ -1238,4 +1264,7 @@ app.mount("/", StaticFiles(directory=str(BASE_DIR), html=True), name="root_stati
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="127.0.0.1", port=8000, reload=True)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    reload_env = os.getenv("RELOAD", "true").lower() in ("true", "1", "yes")
+    uvicorn.run("server:app", host=host, port=port, reload=reload_env)

@@ -5,4 +5,6 @@ __pycache__/
 Thumbs.db
 *.db-journal
 *.db-wal
+.env
+uploads/test_banner_*.png
 

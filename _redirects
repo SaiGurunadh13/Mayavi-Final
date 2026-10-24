@@ -1,0 +1,8 @@
+# Netlify API & Uploads Proxy
+# Once your FastAPI backend is deployed, replace https://YOUR-ACTUAL-BACKEND-DOMAIN
+# with your actual backend URL (e.g. https://mayavi-api.onrender.com).
+# This transparently proxies all /api/* and /uploads/* requests from https://klmayavi.in
+# directly to your backend, avoiding all CORS issues and third-party cookie restrictions.
+
+/api/*  https://YOUR-ACTUAL-BACKEND-DOMAIN/api/:splat  200!
+/uploads/*  https://YOUR-ACTUAL-BACKEND-DOMAIN/uploads/:splat  200!

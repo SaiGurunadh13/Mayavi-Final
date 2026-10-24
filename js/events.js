@@ -13,9 +13,22 @@
     );
   };
 
+  const getApiUrl = (endpoint) => {
+    if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
+    const cfg = window.__MAYAVI_CONFIG__;
+    if (cfg && typeof cfg.API_BASE_URL === 'string' && cfg.API_BASE_URL.trim()) {
+      return cfg.API_BASE_URL.replace(/\/+$/, '') + endpoint;
+    }
+    const loc = window.location;
+    if ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1' || loc.protocol === 'file:') && loc.port !== '8000') {
+      return `http://127.0.0.1:8000${endpoint}`;
+    }
+    return endpoint;
+  };
+
   const load = () => {
     // Try live database API first, fallback to static data.json
-    return fetch('/api/events')
+    return fetch(getApiUrl('/api/events'))
       .then(r => {
         if (!r.ok) throw new Error('API unavailable');
         return r.json();
