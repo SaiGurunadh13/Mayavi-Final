@@ -24,6 +24,16 @@ const AdminApp = (() => {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 
+  // Resolve API URL (handles both direct port 8000 and Live Server / static previews)
+  function getApiUrl(endpoint) {
+    if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
+    const loc = window.location;
+    if ((loc.hostname === 'localhost' || loc.hostname === '127.0.0.1' || loc.protocol === 'file:') && loc.port !== '8000') {
+      return `http://127.0.0.1:8000${endpoint}`;
+    }
+    return endpoint;
+  }
+
   // API Request Wrapper with credentials
   async function api(endpoint, options = {}) {
     const opts = {
@@ -41,8 +51,14 @@ const AdminApp = (() => {
     }
 
     try {
-      const res = await fetch(endpoint, opts);
-      const data = await res.json().catch(() => ({}));
+      const url = getApiUrl(endpoint);
+      const res = await fetch(url, opts);
+
+      const contentType = res.headers.get('content-type') || '';
+      let data = {};
+      if (contentType.includes('application/json')) {
+        data = await res.json().catch(() => ({}));
+      }
 
       if (res.status === 401) {
         // Session expired or invalid
@@ -53,11 +69,14 @@ const AdminApp = (() => {
       }
 
       if (!res.ok) {
-        throw new Error(data.detail || `Request failed (${res.status})`);
+        throw new Error(data.detail || (res.status === 404 ? 'Resource not found (404)' : `Request failed (${res.status})`));
       }
 
       return data;
     } catch (err) {
+      if (err.name === 'TypeError' && String(err.message).toLowerCase().includes('fetch')) {
+        throw new Error('Cannot reach backend server. Ensure "python server.py" is running on port 8000.');
+      }
       throw err;
     }
   }
@@ -138,14 +157,27 @@ const AdminApp = (() => {
     btn.innerHTML = `<div class="spinner"></div><span>Authenticating...</span>`;
 
     try {
-      const res = await fetch('/api/admin/auth/login', {
+      const url = getApiUrl('/api/admin/auth/login');
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ username_or_email: username, password: password })
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data = {};
+      if (contentType.includes('application/json')) {
+        data = await res.json().catch(() => ({}));
+      } else {
+        await res.text().catch(() => '');
+        throw new Error(
+          res.status === 404
+            ? 'Backend API not found (404). Please ensure the FastAPI server is running on http://127.0.0.1:8000 via "python server.py".'
+            : `Server returned an unexpected response (Status ${res.status}). Ensure the FastAPI server is running.`
+        );
+      }
+
       if (!res.ok) {
         throw new Error(data.detail || 'Login failed. Please verify credentials.');
       }
@@ -159,7 +191,11 @@ const AdminApp = (() => {
       switchTab('dashboard');
       loadCategoriesCache();
     } catch (err) {
-      errMsg.textContent = err.message;
+      if (err.name === 'TypeError' && String(err.message).toLowerCase().includes('fetch')) {
+        errMsg.textContent = 'Cannot connect to backend server. Make sure "python server.py" is running on http://127.0.0.1:8000.';
+      } else {
+        errMsg.textContent = err.message;
+      }
       errBox.classList.add('show');
     } finally {
       btn.disabled = false;
