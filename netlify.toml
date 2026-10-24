@@ -2,16 +2,15 @@
 [build]
   publish = "."
 
-# Proxy API calls directly to the deployed FastAPI backend
-# Replace https://YOUR-ACTUAL-BACKEND-DOMAIN with your real deployed backend address (e.g. https://mayavi-api.onrender.com)
+# Proxy API calls directly to the deployed FastAPI backend on Render
 [[redirects]]
   from = "/api/*"
-  to = "https://YOUR-ACTUAL-BACKEND-DOMAIN/api/:splat"
+  to = "https://mayavi-api.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/uploads/*"
-  to = "https://YOUR-ACTUAL-BACKEND-DOMAIN/uploads/:splat"
+  to = "https://mayavi-api.onrender.com/uploads/:splat"
   status = 200
   force = true
