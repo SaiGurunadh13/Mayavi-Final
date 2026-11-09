@@ -6,7 +6,7 @@ and IP-based rate limiting on login attempts.
 import os
 import time
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
@@ -83,9 +83,9 @@ def record_login_attempt(ip_address: str, success: bool):
     conn.close()
 
 def create_admin_session(admin_id: int) -> Tuple[str, datetime]:
-    """Generates a cryptographically secure token and stores it in the database."""
+    """Generates a cryptographically secure token and stores it in the database with timezone-aware expiration."""
     token = secrets.token_urlsafe(48)
-    expires_at = datetime.utcnow() + timedelta(days=SESSION_DURATION_DAYS)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=SESSION_DURATION_DAYS)
     expires_str = expires_at.isoformat()
 
     conn = get_db_connection()
@@ -144,8 +144,20 @@ def get_current_admin(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    expires_at = datetime.fromisoformat(row["expires_at"])
-    if datetime.utcnow() > expires_at:
+    try:
+        expires_at = datetime.fromisoformat(row["expires_at"])
+        # Support both historical naive timestamps and modern timezone-aware timestamps
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+    except Exception:
+        invalidate_session(token)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session has invalid timestamp format. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    if datetime.now(timezone.utc) > expires_at:
         invalidate_session(token)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -45,12 +45,18 @@
   padding: 0;
 }
 
-html, body {
-  height: 100%;
+html {
+  min-height: 100%;
   background: var(--bg);
   color: var(--ink);
   font: 400 14px/1.5 var(--f-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  background: var(--bg);
   overflow-x: hidden;
 }
 
@@ -357,7 +363,7 @@ button, input, select, textarea {
 }
 
 .app-container.active {
-  display: flex;
+  display: block;
 }
 
 /* Sidebar */
@@ -496,11 +502,10 @@ button, input, select, textarea {
 
 /* Main Area */
 .app-main {
-  flex: 1;
   margin-left: var(--sidebar-w);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
 }
 
 /* Header */
@@ -1231,6 +1236,17 @@ button, input, select, textarea {
   flex-direction: column;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), var(--shadow-glow);
   animation: cardEnter 0.25s var(--transition);
+  overflow: hidden;
+}
+
+/* Forms inside modals must fill the modal card as a flex column
+   so the sticky footer (Save button) is always visible */
+.modal-card > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .modal-card.modal-lg {
@@ -1278,6 +1294,7 @@ button, input, select, textarea {
   padding: 24px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -1287,6 +1304,7 @@ button, input, select, textarea {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .btn-secondary {

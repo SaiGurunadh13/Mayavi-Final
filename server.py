@@ -9,7 +9,7 @@ import json
 import uuid
 import time
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response, HTTPException, status, Depends, UploadFile, File, Form, Query
@@ -33,15 +33,110 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 ADMIN_DIR = BASE_DIR / "admin"
 ADMIN_DIR.mkdir(parents=True, exist_ok=True)
 
+# Production Environment Detection
+def is_production_env() -> bool:
+    """Detects if the application is running in a production or cloud environment."""
+    env = os.getenv("ENVIRONMENT", "").strip().lower()
+    return env in ("production", "prod", "live") or os.getenv("RENDER", "").strip().lower() == "true"
+
+# Storage Persistence Diagnostics (Phase 5)
+def check_storage_diagnostics() -> Dict[str, Any]:
+    """
+    Evaluates whether data and media storage are configured on persistent
+    mounts or inside ephemeral container directories.
+    """
+    data_dir_env = os.getenv("DATA_DIR")
+    uploads_dir_env = os.getenv("UPLOADS_DIR")
+
+    current_data_dir = Path(data_dir_env) if data_dir_env else (BASE_DIR / "data")
+    current_uploads_dir = Path(uploads_dir_env) if uploads_dir_env else (BASE_DIR / "uploads")
+
+    is_render = os.getenv("RENDER", "").strip().lower() == "true"
+    is_prod = is_production_env()
+
+    try:
+        data_in_repo = current_data_dir.resolve().is_relative_to(BASE_DIR)
+    except AttributeError:
+        data_in_repo = str(current_data_dir.resolve()).startswith(str(BASE_DIR.resolve()))
+
+    try:
+        uploads_in_repo = current_uploads_dir.resolve().is_relative_to(BASE_DIR)
+    except AttributeError:
+        uploads_in_repo = str(current_uploads_dir.resolve()).startswith(str(BASE_DIR.resolve()))
+
+    is_ephemeral = (is_render or is_prod) and (data_in_repo or uploads_in_repo)
+    storage_type = "ephemeral" if is_ephemeral else ("persistent" if (not data_in_repo and not uploads_in_repo) else "local_development")
+
+    return {
+        "storage_type": storage_type,
+        "is_ephemeral": is_ephemeral,
+        "data_dir": str(current_data_dir.resolve()),
+        "uploads_dir": str(current_uploads_dir.resolve()),
+        "data_in_repo": data_in_repo,
+        "uploads_in_repo": uploads_in_repo,
+        "is_render": is_render,
+        "is_production": is_prod,
+        "warning": (
+            "EPHEMERAL STORAGE DETECTED: DATA_DIR or UPLOADS_DIR is located within the application repository. "
+            "On Render container restarts, database updates and uploads will be erased unless a persistent disk "
+            "(e.g., /var/data) is mounted."
+        ) if is_ephemeral else None
+    }
+
+# Run startup storage diagnostics check
+storage_diag = check_storage_diagnostics()
+if storage_diag["is_ephemeral"]:
+    print(f"[!] WARNING: {storage_diag['warning']}")
+elif storage_diag["storage_type"] == "persistent":
+    print(f"[*] Persistent storage detected: Database -> {storage_diag['data_dir']}, Uploads -> {storage_diag['uploads_dir']}")
+
 # Initialize Database and seed initial data
 init_db()
 seed_data_if_empty(ph)
 
+# Production API Documentation Security Control (Phase 3)
+def should_enable_docs() -> bool:
+    """
+    Documentation policy:
+    - In production/Render, strictly disabled by default (404 Not Found).
+    - Can only be enabled in production via explicit ENABLE_DOCS=true.
+    - In development, enabled by default for developer productivity.
+    """
+    raw = os.getenv("ENABLE_DOCS")
+    if raw is not None:
+        return raw.strip().lower() in ("true", "1", "yes")
+    return not is_production_env()
+
+ENABLE_DOCS = should_enable_docs()
+
 app = FastAPI(
     title="Mayavi Tech Club API",
     description="Backend API and Administrative Portal for Mayavi Technology Club",
-    version="2.0.0"
+    version="2.0.0",
+    docs_url="/docs" if ENABLE_DOCS else None,
+    redoc_url="/redoc" if ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_DOCS else None,
 )
+
+# Explicit 404 protection if API documentation is disabled
+if not ENABLE_DOCS:
+    @app.get("/docs", include_in_schema=False)
+    @app.get("/docs/", include_in_schema=False)
+    @app.get("/redoc", include_in_schema=False)
+    @app.get("/redoc/", include_in_schema=False)
+    @app.get("/openapi.json", include_in_schema=False)
+    async def disabled_docs():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 # CORS Middleware - Production and Development Safe
 allowed_origins_env = os.getenv("CORS_ORIGINS", "")
@@ -68,11 +163,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Helper to get client IP for rate limiting
+# Helper to get client IP for rate limiting (secure proxy-aware)
 def get_client_ip(request: Request) -> str:
+    # 1. Cloudflare header (set by Cloudflare / Render edge, cannot be spoofed by client)
+    cf_ip = request.headers.get("cf-connecting-ip")
+    if cf_ip and cf_ip.strip():
+        return cf_ip.strip()
+
+    # 2. Netlify client connection IP (set by Netlify edge)
+    nf_ip = request.headers.get("x-nf-client-connection-ip")
+    if nf_ip and nf_ip.strip():
+        return nf_ip.strip()
+
+    # 3. Standard Real-IP header from trusted reverse proxy
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip and real_ip.strip():
+        return real_ip.strip()
+
+    # 4. Fallback to rightmost proxy in X-Forwarded-For or direct client host
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+
     return request.client.host if request.client else "127.0.0.1"
 
 
@@ -296,9 +410,89 @@ async def change_password(payload: PasswordChangeRequest, admin: dict = Depends(
 # IMAGE UPLOAD SYSTEM
 # ============================================================================
 
-ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"}
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
+ALLOWED_MIME_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MIME_EXTENSION_MAP = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif"
+}
+PIL_FORMAT_MAP = {
+    ".jpg": "JPEG",
+    ".jpeg": "JPEG",
+    ".png": "PNG",
+    ".webp": "WEBP",
+    ".gif": "GIF"
+}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+def check_svg_content_safety(contents: bytes) -> Tuple[bool, str]:
+    """
+    Multi-layer SVG security inspection:
+    1. Raw content pattern scanning for active scripts, handlers, and dangerous URIs.
+    2. XML tree inspection ensuring only safe visual SVG elements and attributes exist.
+    """
+    try:
+        text = contents.decode("utf-8", errors="ignore").lower()
+    except Exception:
+        return False, "Malformed SVG text encoding."
+
+    # Pattern scan for active scripts, foreign objects, and execution hooks
+    dangerous_patterns = [
+        r"<script[\s>]",
+        r"</script>",
+        r"<foreignobject[\s>]",
+        r"<iframe[\s>]",
+        r"<object[\s>]",
+        r"<embed[\s>]",
+        r"<animate[\s>]",
+        r"<set[\s>]",
+        r"\bon\w+\s*=",      # onload=, onerror=, onclick=, etc.
+        r"javascript\s*:",
+        r"vbscript\s*:",
+        r"data\s*:\s*text/html"
+    ]
+    for pattern in dangerous_patterns:
+        if re.search(pattern, text):
+            return False, "SVG contains active scripts, foreignObjects, or event handlers."
+
+    # XML tree validation
+    try:
+        import xml.etree.ElementTree as ET
+        # Defend against entity expansion
+        parser = ET.XMLParser()
+        root = ET.fromstring(contents, parser=parser)
+        
+        # Verify root tag is an SVG element
+        tag_name = root.tag.split("}")[-1] if "}" in root.tag else root.tag
+        if tag_name.lower() != "svg":
+            return False, "Invalid SVG document root."
+
+        # Recursively inspect all elements
+        forbidden_tags = {"script", "foreignobject", "iframe", "object", "embed", "animate", "set", "link", "meta"}
+        for elem in root.iter():
+            local_tag = elem.tag.split("}")[-1].lower() if "}" in elem.tag else elem.tag.lower()
+            if local_tag in forbidden_tags:
+                return False, f"SVG contains prohibited element <{local_tag}>."
+
+            for attr, val in elem.attrib.items():
+                local_attr = attr.split("}")[-1].lower() if "}" in attr else attr.lower()
+                val_lower = str(val).lower().strip()
+                if local_attr.startswith("on"):
+                    return False, f"SVG contains prohibited event attribute '{local_attr}'."
+                if any(scheme in val_lower for scheme in ("javascript:", "vbscript:", "data:text/html")):
+                    return False, f"SVG contains dangerous URI scheme in attribute '{local_attr}'."
+    except Exception as e:
+        return False, f"Malformed or invalid SVG XML: {str(e)}"
+
+    return True, ""
 
 @app.post("/api/admin/upload")
 async def upload_image(
@@ -309,31 +503,66 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="No file selected")
 
     ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file extension '{ext}'. Allowed types: JPG, PNG, WebP, GIF, SVG."
-        )
 
-    # Read content
-    contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File size exceeds the 10MB limit.")
+    # Reject SVG uploads by default (Security Hardening Phase 2)
+    allow_svg = os.getenv("ALLOW_SVG_UPLOADS", "false").strip().lower() in ("true", "1", "yes")
+    if ext == ".svg":
+        if not allow_svg:
+            raise HTTPException(
+                status_code=400,
+                detail="SVG uploads are disabled for security reasons. Please upload JPG, PNG, WebP, or GIF."
+            )
+        # If explicitly enabled, enforce strict multi-layer sanitization
+        contents = await file.read()
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File size exceeds the 10MB limit.")
+        is_safe, reason = check_svg_content_safety(contents)
+        if not is_safe:
+            raise HTTPException(status_code=400, detail=f"SVG rejected: {reason}")
+    else:
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file extension '{ext}'. Allowed types: JPG, PNG, WebP, GIF."
+            )
 
-    # Validate image file integrity (skip SVG since it is XML)
-    if ext != ".svg":
+        # MIME type header verification
+        content_type = file.content_type.lower() if file.content_type else ""
+        if content_type and content_type not in ALLOWED_MIME_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid MIME type '{content_type}'. Allowed: image/jpeg, image/png, image/webp, image/gif."
+            )
+
+        # Read content
+        contents = await file.read()
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File size exceeds the 10MB limit.")
+
+        # Deep Image integrity validation via Pillow
         try:
             import io
             img = Image.open(io.BytesIO(contents))
             img.verify()
+
+            # Verify image format matches file extension to prevent MIME-extension spoofing
+            expected_format = PIL_FORMAT_MAP.get(ext)
+            if expected_format and img.format != expected_format:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Image content format ({img.format}) does not match extension '{ext}'."
+                )
+        except HTTPException:
+            raise
         except Exception:
-            raise HTTPException(status_code=400, detail="Invalid image file or corrupted data.")
+            raise HTTPException(status_code=400, detail="Invalid image file or corrupted image data.")
 
     # Safe unique filename
     safe_stem = re.sub(r'[^a-zA-Z0-9_-]', '_', Path(file.filename).stem)[:30]
     unique_name = f"{safe_stem}_{int(time.time())}_{uuid.uuid4().hex[:6]}{ext}"
     dest_path = UPLOADS_DIR / unique_name
 
+    # Write file to disk only after all security validations have passed
     with open(dest_path, "wb") as f:
         f.write(contents)
 
@@ -396,6 +625,7 @@ async def get_dashboard_data(admin: dict = Depends(get_current_admin)):
             "total_teams": total_teams,
             "total_categories": total_categories
         },
+        "storage": check_storage_diagnostics(),
         "recent_activity": recent_activity,
         "recent_events": recent_events,
         "recent_members": recent_members

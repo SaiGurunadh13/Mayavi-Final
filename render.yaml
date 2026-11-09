@@ -1,0 +1,44 @@
+# Render Blueprint Specification for Mayavi Technology Club Backend API
+# Documentation: https://render.com/docs/blueprint-spec
+#
+# IMPORTANT OPERATIONAL NOTE:
+# Persistent disks on Render require a paid plan (Starter or higher).
+# Free-tier web services on Render have an ephemeral filesystem and do not support disks.
+# Do not apply this blueprint automatically if an existing Render service is already
+# configured manually, as it may create a duplicate service.
+
+services:
+  - type: web
+    name: mayavi-api
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/categories
+    disk:
+      name: mayavi-data-disk
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: ENABLE_DOCS
+        value: false
+      - key: ALLOW_SVG_UPLOADS
+        value: false
+      - key: DATA_DIR
+        value: /var/data/data
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+      - key: CORS_ORIGINS
+        value: https://klmayavi.in,https://www.klmayavi.in
+      - key: COOKIE_SECURE
+        value: true
+      - key: COOKIE_SAMESITE
+        value: lax
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        value: admin@mayavi.tech
+      - key: ADMIN_PASSWORD
+        generateValue: true
